@@ -1,0 +1,29 @@
+name: Offline contract verification
+on: [push, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run behavior and CLI regression tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Accept explicit production canonical
+        uses: ./
+        with:
+          html-file: fixtures/production.html
+          page-url: https://preview.example/products/widget
+          expected-origin: https://production.example
+      - name: Reject a preview origin
+        id: reject_preview
+        continue-on-error: true
+        uses: ./
+        with:
+          html-file: fixtures/preview.html
+          page-url: https://preview.example/products/widget
+          expected-origin: https://production.example
+      - name: Require the negative fixture to fail
+        env:
+          NEGATIVE_FIXTURE_OUTCOME: ${{ steps.reject_preview.outcome }}
+        run: test "$NEGATIVE_FIXTURE_OUTCOME" = failure
