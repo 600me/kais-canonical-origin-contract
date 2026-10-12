@@ -1,0 +1,30 @@
+name: Kais Canonical Origin Contract
+description: Check one saved HTML canonical against an explicit production origin, offline and without a token.
+author: Kais
+branding:
+  icon: check-circle
+  color: blue
+inputs:
+  html-file:
+    description: Path to the saved UTF-8 HTTP HTML response, at most 2 MiB.
+    required: true
+  page-url:
+    description: Final page URL that produced the saved HTML, used to resolve relative links.
+    required: true
+  expected-origin:
+    description: Required canonical origin, such as https://production.example (scheme, host, optional port).
+    required: true
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        CONTRACT_HTML_FILE: ${{ inputs.html-file }}
+        CONTRACT_PAGE_URL: ${{ inputs.page-url }}
+        CONTRACT_EXPECTED_ORIGIN: ${{ inputs.expected-origin }}
+        CONTRACT_ACTION_PATH: ${{ github.action_path }}
+      run: |
+        python3 "$CONTRACT_ACTION_PATH/check_canonical.py" \
+          --html-file "$CONTRACT_HTML_FILE" \
+          --page-url "$CONTRACT_PAGE_URL" \
+          --expected-origin "$CONTRACT_EXPECTED_ORIGIN"
